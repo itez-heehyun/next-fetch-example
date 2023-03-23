@@ -1,11 +1,91 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from 'src/styles/Home.module.css'
+import Head from "next/head";
+import Image from "next/image";
+import { Inter } from "next/font/google";
+import styles from "src/styles/Home.module.css";
+import { useEffect, useState } from "react";
+import { GetServerSideProps } from "next";
+import request, { GraphQLClient } from "graphql-request";
+import { SelectProductsByEveryoneDocument } from "src/api/gql/graphql";
+import { useQuery } from "@tanstack/react-query";
 
-const inter = Inter({ subsets: ['latin'] })
+/* 
+  React에서 데이터연동에 필요한 것
+  1. graphql
+  2. graphql-request
+  3. graphql-codegen
+  4. @tanstack/react-query
+ */
 
-export default function Home() {
+const endpoint = "https://api.itez.io/cakey/graphql";
+
+const graphqlClient = new GraphQLClient(endpoint);
+/* 
+  고양이 목록 달라! -> method: GET, path: https://test/api/v1/cats
+  id가 1인 고양이 달라! -> method: GET, path: https://test/api/v2/cat?id=1
+*/
+
+// const getA = async () => {
+//   await new Promise((resolve) => {
+//     let nums: number[] = [];
+
+//     setTimeout(() => {
+//       nums.push(1);
+//     }, 10000);
+//     resolve(nums);
+//   });
+// };
+
+// getA()
+
+const inter = Inter({ subsets: ["latin"] });
+
+interface Props {
+  cats: any[];
+}
+
+export default function Home(props: Props) {
+  const { data, isLoading } = useQuery(["products"], () =>
+    graphqlClient.request(SelectProductsByEveryoneDocument)
+  );
+
+  console.log(data);
+
+  // const {} = useQuery([],() => {},{}) // case1
+  // const {} = useQuery({
+  //   queryKey: [],
+  //   queryFn: () => {},
+  //   // option...
+  // }); // case2
+
+  // useEffect(() => {
+  //   graphqlClient
+  //     .request(SelectProductsByEveryoneDocument)
+  //     .then((res) => {
+  //       console.log(res.selectProductsByEveryone);
+  //     })
+  //     .then((res) => console.log("Graphql", res));
+  // }, []);
+  // const [isLoading, setIsLoading] = useState(true);
+  // const [createdAts, setCreatedAts] = useState<string[]>([]);
+  // useEffect(() => {
+  //   fetch("https://cataas.com/api/cats")
+  //     .then((response) => response.json())
+  //     .then((json) => {
+  //       setCreatedAts(json.map((v: any) => v.createdAt));
+  //       setIsLoading(false);
+  //     })
+  //     // .then(async (response) => {
+  //     //   const result = await response.json();
+  //     //   console.log(result);
+  //     // })
+  //     .catch((error) => {
+  //       console.log(error);
+  //     })
+  //     .finally(() => {
+  //       console.log("finally");
+  //     });
+  // }, []);
+
   return (
     <>
       <Head>
@@ -16,6 +96,15 @@ export default function Home() {
       </Head>
       <main className={styles.main}>
         <div className={styles.description}>
+          {/* {isLoading ? (
+            <span>Loading...</span>
+          ) : (
+            <>
+              {createdAts.map((v) => (
+                <span key={v}>{v}</span>
+              ))}
+            </>
+          )} */}
           <p>
             Get started by editing&nbsp;
             <code className={styles.code}>src/pages/index.tsx</code>
@@ -26,7 +115,7 @@ export default function Home() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              By{' '}
+              By{" "}
               <Image
                 src="/vercel.svg"
                 alt="Vercel Logo"
@@ -119,5 +208,26 @@ export default function Home() {
         </div>
       </main>
     </>
-  )
+  );
 }
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const cats = await fetch("https://cataas.com/api/cats")
+    .then((response) => response.json())
+    // .then(async (response) => {
+    //   const result = await response.json();
+    //   console.log(result);
+    // })
+    .catch((error) => {
+      console.log(error);
+    })
+    .finally(() => {
+      console.log("finally");
+    });
+
+  return {
+    props: {
+      cats,
+    },
+  };
+};

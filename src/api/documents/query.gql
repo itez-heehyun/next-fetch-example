@@ -1,0 +1,6 @@
+query SelectProductsByEveryone {
+  selectProductsByEveryone {
+    id
+    name
+  }
+}
